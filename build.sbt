@@ -6,6 +6,8 @@ sources := {
     (baseDirectory.value / "owlpod.scala").get
 }
 
+mainClass in (Compile, run) := Some("ProtegePostprocess")
+
 scalaVersion := "2.11.8"
 
 libraryDependencies += "org.aksw.owlpod" %% "owlpod" % "0.5.4"
