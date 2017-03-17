@@ -1,0 +1,12 @@
+[submodule "MMoOn"]
+	path = MMoOn
+	url = https://github.com/MMoOn-Project/MMoOn.git
+	branch = release
+[submodule "OpenGerman"]
+	path = OpenGerman
+	url = https://github.com/MMoOn-Project/OpenGerman.git
+	branch = master
+[submodule "OpenHebrew"]
+	path = OpenHebrew
+	url = https://github.com/MMoOn-Project/OpenHebrew.git
+	branch = master
