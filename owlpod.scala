@@ -18,7 +18,7 @@ object Con extends OwlpodRunner with CommonRunConfig {
       ontDocSets = Seq(mmoonCore, mmoonOGDocs),
       tasks = Seq(
         SeparateOrdinalDigits,
-        new AddInferences()),
+        AddInferences.AllOntologies()),
       outputConfig = MultipleFormats(Set(Turtle, NTriples, OWLXML, RDFXML),
         formatLocations = AddFilenameInfix("op"),
         postprocessors = Seq(TrimComments(), NormalizeBlankLinesForTurtle)),
@@ -32,7 +32,7 @@ object ProtegePostprocess extends OwlpodRunner with CommonRunConfig {
   lazy val setups = Seq(
     CurationSetup(
       name = "MMoOn OpenGerman Protege Post-Processing",
-      ontDocSets = Seq(mmoonCore),
+      ontDocSets = Seq(mmoonCore, mmoonOGDocs),
       tasks = Seq(RemoveExternalAxioms()),
       outputConfig = ReplaceSources(
         postprocessors = Seq(TrimComments(), NormalizeBlankLinesForTurtle)),
@@ -43,7 +43,7 @@ object ProtegePostprocess extends OwlpodRunner with CommonRunConfig {
 
 object Jenkins {
 
-  def runner(targetDir: String) = new CommonRunConfig with OwlpodRunner {
+  def runner(targetDir: String, prefixesToStrip: Int = 0) = new CommonRunConfig with OwlpodRunner {
 
     lazy val setups = Seq(
       CurationSetup(
@@ -52,7 +52,7 @@ object Jenkins {
         tasks = Seq(RemoveExternalAxioms()),
         outputConfig = MultipleFormats(
           Set(Turtle, NTriples, OWLXML, RDFXML, Manchester, Functional),
-          PreserveRelativePaths(mmoonRoot.pathAsString, targetDir),
+          PreserveRelativePaths(mmoonRoot.pathAsString, targetDir, prefixesToStrip),
           postprocessors = Seq(TrimComments(), NormalizeBlankLinesForTurtle),
           overwriteExisting = true
         ),
@@ -64,7 +64,9 @@ object Jenkins {
   def main(args: Array[String]): Unit = args.toList match {
 
     case targetDir :: Nil => runner(targetDir).runSetups()
-    case _ => sys.error("expecting exactly one command line argument stating target directory")
+    case targetDir :: prefixesToStrip :: Nil => runner(targetDir, prefixesToStrip.toInt).runSetups()
+    case _ => sys.error("expecting one or two command line arguments: target directory and optionally which number " +
+      "of prefix segments to strip from the relative paths")
   }
 }
 
