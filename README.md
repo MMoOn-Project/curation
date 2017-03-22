@@ -10,7 +10,7 @@ Sub-repositories to be postprocessed and/or released have been added as
 [Git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) that
 point to the `release` branch of referred repos.
 
-Thus, to get this repo in a working state perform init and update of these 
+To get this repo in a working state perform init and update of these 
 submodules after cloning via `git submodule update --init --remote`.
 
 Use `git submodule foreach 'git checkout origin/release'` if you want to 
