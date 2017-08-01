@@ -8,9 +8,9 @@ sources := {
 
 mainClass in (Compile, run) := Some("ProtegePostprocess")
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.2"
 
-libraryDependencies += "org.aksw.owlpod" %% "owlpod" % "0.5.5"
+libraryDependencies += "org.aksw.owlpod" %% "owlpod" % "0.5.6"
 
 resolvers ++= Seq(
     "AKSW Snapshots" at "http://maven.aksw.org/repository/snapshots/",

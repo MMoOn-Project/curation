@@ -10,23 +10,6 @@ import org.aksw.owlpod.util._
 import org.semanticweb.owlapi.util.CommonBaseIRIMapper
 import better.files._
 
-object Con extends OwlpodRunner with CommonRunConfig {
-
-  lazy val setups = Seq(
-    CurationSetup(
-      name = "MMoOn OG",
-      ontDocSets = Seq(mmoonCore, mmoonOGDocs),
-      tasks = Seq(
-        SeparateOrdinalDigits,
-        AddInferences.AllOntologies()),
-      outputConfig = MultipleFormats(Set(Turtle, NTriples, OWLXML, RDFXML),
-        formatLocations = AddFilenameInfix("op"),
-        postprocessors = Seq(TrimComments(), NormalizeBlankLinesForTurtle)),
-      iriMappings = Seq(mmoonRepoIriMapper)
-    )
-  )
-}
-
 object ProtegePostprocess extends OwlpodRunner with CommonRunConfig {
 
   lazy val setups = Seq(
@@ -47,9 +30,12 @@ object Jenkins {
 
     lazy val setups = Seq(
       CurationSetup(
-        name = s"Jenkins format multiplexing to $targetDir",
+        name = s"Jenkins load to BG (w/o inf) and format multiplexing to $targetDir",
         ontDocSets = Seq(mmoonCore, mmoonOGDocs),
-        tasks = Seq(RemoveExternalAxioms()),
+        tasks = Seq(
+          RemoveExternalAxioms(),
+          LoadIntoBlazeGraph("mmoon", NoInferenceQuads(false, "http://mmoon.org/fallback/"))
+        ),
         outputConfig = MultipleFormats(
           Set(Turtle, NTriples, OWLXML, RDFXML, Manchester, Functional),
           PreserveRelativePaths(mmoonRoot.pathAsString, targetDir, prefixesToStrip),
@@ -57,8 +43,7 @@ object Jenkins {
           overwriteExisting = true
         ),
         iriMappings = Seq(mmoonRepoIriMapper)
-      )
-    )
+      ))
   }
 
   def main(args: Array[String]): Unit = args.toList match {
@@ -79,19 +64,19 @@ trait CommonRunConfig { this: OwlpodRunner =>
 
   lazy val mmoonRoot: File = File(".").path.toAbsolutePath
 
-  lazy val mmoonCore = OntologyDocumentList("MMoOn/core.ttl")
+  lazy val mmoonCore = OntologyDocumentList.relative("MMoOn/core.ttl")
 
-  lazy val mmoonOGDocs = OntologyDocumentList(
+  lazy val mmoonOGDocs = OntologyDocumentList.relative(
     "OpenGerman/deu/schema/og.ttl",
     "OpenGerman/deu/inventory/og.ttl"
   )
 
-  lazy val mmoonOHDocs = OntologyDocumentList(
+  lazy val mmoonOHDocs = OntologyDocumentList.relative(
     "OpenHebrew/heb/schema/oh.ttl",
     "OpenHebrew/heb/inventory/oh.ttl"
   )
 
-  lazy val mmoonPEDocs = OntologyDocumentList(
+  lazy val mmoonPEDocs = OntologyDocumentList.relative(
     "deu/schema/pe.ttl",
     "deu/inventory/pe.ttl",
     "spa/schema/pe.ttl",
