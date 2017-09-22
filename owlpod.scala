@@ -15,7 +15,7 @@ object ProtegePostprocess extends OwlpodRunner with CommonRunConfig {
   lazy val setups = Seq(
     CurationSetup(
       name = "MMoOn OpenGerman Protege Post-Processing",
-      ontDocSets = Seq(coreDocs, openGermanDocs, openBantuDocs),
+      ontDocSets = Seq(coreDocs, openGermanDocs),
       tasks = Seq(RemoveExternalAxioms()),
       outputConfig = ReplaceSources(
         postprocessors = Seq(TrimComments(), NormalizeBlankLinesForTurtle)),
