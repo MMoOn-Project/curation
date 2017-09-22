@@ -10,3 +10,6 @@
 	path = OpenHebrew
 	url = https://github.com/MMoOn-Project/OpenHebrew.git
 	branch = master
+[submodule "OpenBantu"]
+	path = OpenBantu
+	url = https://github.com/MMoOn-Project/OpenBantu.git
