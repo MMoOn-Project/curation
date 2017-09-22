@@ -15,7 +15,7 @@ object ProtegePostprocess extends OwlpodRunner with CommonRunConfig {
   lazy val setups = Seq(
     CurationSetup(
       name = "MMoOn OpenGerman Protege Post-Processing",
-      ontDocSets = Seq(mmoonCore, mmoonOGDocs),
+      ontDocSets = Seq(coreDocs, openGermanDocs, openBantuDocs),
       tasks = Seq(RemoveExternalAxioms()),
       outputConfig = ReplaceSources(
         postprocessors = Seq(TrimComments(), NormalizeBlankLinesForTurtle)),
@@ -31,7 +31,7 @@ object Jenkins {
     lazy val setups = Seq(
       CurationSetup(
         name = s"Jenkins load to BG (w/o inf) and format multiplexing to $targetDir",
-        ontDocSets = Seq(mmoonCore, mmoonOGDocs),
+        ontDocSets = Seq(coreDocs, openGermanDocs),
         tasks = Seq(
           RemoveExternalAxioms(),
           LoadIntoBlazeGraph("mmoon", NoInferenceQuads(false, "http://mmoon.org/fallback/"))
@@ -64,24 +64,19 @@ trait CommonRunConfig { this: OwlpodRunner =>
 
   lazy val mmoonRoot: File = File(".").path.toAbsolutePath
 
-  lazy val mmoonCore = OntologyDocumentList.relative("MMoOn/core.ttl")
+  lazy val coreDocs = OntologyDocumentList.relative("MMoOn/core.ttl")
 
-  lazy val mmoonOGDocs = OntologyDocumentList.relative(
+  lazy val openGermanDocs = OntologyDocumentList.relative(
     "OpenGerman/deu/schema/og.ttl",
     "OpenGerman/deu/inventory/og.ttl"
   )
 
-  lazy val mmoonOHDocs = OntologyDocumentList.relative(
+  lazy val openHebrewDocs = OntologyDocumentList.relative(
     "OpenHebrew/heb/schema/oh.ttl",
     "OpenHebrew/heb/inventory/oh.ttl"
   )
 
-  lazy val mmoonPEDocs = OntologyDocumentList.relative(
-    "deu/schema/pe.ttl",
-    "deu/inventory/pe.ttl",
-    "spa/schema/pe.ttl",
-    "spa/inventory/pe.ttl"
-  )
+  lazy val openBantuDocs = OntologyDocumentList.relative("OpenBantu/bnt/schema/bantulm.ttl")
 
   lazy val mmoonRepoIriMapper: CommonBaseIRIMapper = {
 
@@ -97,10 +92,7 @@ trait CommonRunConfig { this: OwlpodRunner =>
     "http://mmoon.org/deu/inventory/og/".toIRI -> "OpenGerman/deu/inventory/og.ttl",
     "http://mmoon.org/lang/heb/schema/oh/".toIRI -> "OpenHebrew/heb/schema/oh.ttl",
     "http://mmoon.org/lang/heb/inventory/oh/".toIRI -> "OpenHebrew/heb/inventory/oh.ttl",
-    "http://mmoon.org/deu/schema/pe/".toIRI -> "deu/schema/pe.ttl",
-    "http://mmoon.org/deu/inventory/pe/".toIRI -> "deu/inventory/pe.ttl",
-    "http://mmoon.org/spa/schema/pe/".toIRI -> "spa/schema/pe.ttl",
-    "http://mmoon.org/spa/inventory/pe/".toIRI -> "spa/inventory/pe.ttl"
+    "http://www.mmoon.org/bnt/schema/bantulm/".toIRI -> "OpenBantu/bnt/schema/bantulm.ttl",
   )
 
   def main(args: Array[String]) {
