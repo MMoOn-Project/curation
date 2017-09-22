@@ -2,3 +2,5 @@ catalog-v*.xml
 rules.log
 .idea/
 target/
+project/
+
