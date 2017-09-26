@@ -1,25 +1,37 @@
-import org.aksw.owlpod.{OwlpodRunner, _}
+import ProtegePostprocess.{mmoonRepoIriMapper, openBantuDocs}
+import better.files._
+import org.aksw.owlpod.OwlpodRunner
 import org.aksw.owlpod.config._
+import org.aksw.owlpod.execution.FailOnEverythingPolicy
+import org.aksw.owlpod.postprocessing._
+import org.aksw.owlpod.preprocessing._
 import org.aksw.owlpod.reporting._
-import org.aksw.owlpod.serialisation._
 import org.aksw.owlpod.serialisation.OWLFormat._
 import org.aksw.owlpod.serialisation.outputconfigs._
-import org.aksw.owlpod.tasks._
 import org.aksw.owlpod.tasks.ImportConfig._
+import org.aksw.owlpod.tasks._
 import org.aksw.owlpod.util._
 import org.semanticweb.owlapi.util.CommonBaseIRIMapper
-import better.files._
 
 object ProtegePostprocess extends OwlpodRunner with CommonRunConfig {
 
   lazy val setups = Seq(
     CurationSetup(
       name = "MMoOn OpenGerman Protege Post-Processing",
-      ontDocSets = Seq(coreDocs, openGermanDocs),
-      tasks = Seq(RemoveExternalAxioms()),
-      outputConfig = ReplaceSources(
-        postprocessors = Seq(TrimComments(), NormalizeBlankLinesForTurtle)),
+      ontDocSets = Seq(openGermanDocs),
+      tasks = Seq(),
+      postprocessors = Seq(TrimComments(), NormalizeBlankLinesForTurtle),
+      outputConfig = ReplaceSources(),
       iriMappings = Seq(mmoonRepoIriMapper)
+    ),
+    CurationSetup(
+      name = "MMoOn OpenBantu Protege Post-Processing",
+      ontDocSets = Seq(openBantuDocs),
+      tasks = Seq(RemoveImports("urn://www.mmoon.org/fix/bantulm/ext-decl/", "http://mmoon.org/core/")),
+      preprocessors = Seq(AddImports("urn://www.mmoon.org/fix/bantulm/ext-decl/", "http://mmoon.org/core/")),
+      postprocessors = Seq(TrimComments(), NormalizeBlankLinesForTurtle),
+      outputConfig = ReplaceSources(),
+      iriMappings = Seq(mmoonRepoIriMapper),
     )
   )
 }
@@ -30,20 +42,34 @@ object Jenkins {
 
     lazy val setups = Seq(
       CurationSetup(
-        name = s"Jenkins load to BG (w/o inf) and format multiplexing to $targetDir",
+        name = s"Jenkins - MMoOn Core & OpenGerman: Blazegraph import and format multiplexing to $targetDir",
         ontDocSets = Seq(coreDocs, openGermanDocs),
         tasks = Seq(
           RemoveExternalAxioms(),
-          LoadIntoBlazeGraph("mmoon", NoInferenceQuads(false, "http://mmoon.org/fallback/"))
+          LoadIntoBlazeGraph("mmoon", NoInferenceQuads(fulltextIndexing = false, "http://mmoon.org/fallback/"))
         ),
+        postprocessors = Seq(TrimComments(), NormalizeBlankLinesForTurtle),
         outputConfig = MultipleFormats(
           Set(Turtle, NTriples, OWLXML, RDFXML, Manchester, Functional),
           PreserveRelativePaths(mmoonRoot.pathAsString, targetDir, prefixesToStrip),
-          postprocessors = Seq(TrimComments(), NormalizeBlankLinesForTurtle),
           overwriteExisting = true
         ),
         iriMappings = Seq(mmoonRepoIriMapper)
-      ))
+      ),
+      CurationSetup(
+        name = s"Jenkins - OpenBantu: format multiplexing to $targetDir",
+        ontDocSets = Seq(openBantuDocs),
+        tasks = Seq(RemoveImports("urn://www.mmoon.org/fix/bantulm/ext-decl/", "http://mmoon.org/core/")),
+        preprocessors = Seq(AddImports("urn://www.mmoon.org/fix/bantulm/ext-decl/", "http://mmoon.org/core/")),
+        postprocessors = Seq(TrimComments(), NormalizeBlankLinesForTurtle),
+        outputConfig = MultipleFormats(
+          Set(Turtle, NTriples, OWLXML, RDFXML, Manchester, Functional),
+          PreserveRelativePaths(mmoonRoot.pathAsString, targetDir, prefixesToStrip),
+          overwriteExisting = true
+        ),
+        iriMappings = Seq(mmoonRepoIriMapper),
+      )
+    )
   }
 
   def main(args: Array[String]): Unit = args.toList match {
@@ -81,18 +107,19 @@ trait CommonRunConfig { this: OwlpodRunner =>
   lazy val mmoonRepoIriMapper: CommonBaseIRIMapper = {
 
     val im = new CommonBaseIRIMapper(mmoonRoot.uri)
-    ontIRI2ShortPath foreach { case (iri, sp) => im.addMapping(iri, sp) }
+    ontIRI2ShortPath foreach { case (iri, sp) => im.addMapping(iri.toIRI, sp) }
     im
   }
 
   protected lazy val ontIRI2ShortPath = Map(
-    "http://mmoon.org/core/".toIRI -> "MMoOn/core.ttl",
-    "http://mmoon.org/core/v1.0.0/".toIRI -> "MMoOn/core.ttl",
-    "http://mmoon.org/deu/schema/og/".toIRI -> "OpenGerman/deu/schema/og.ttl",
-    "http://mmoon.org/deu/inventory/og/".toIRI -> "OpenGerman/deu/inventory/og.ttl",
-    "http://mmoon.org/lang/heb/schema/oh/".toIRI -> "OpenHebrew/heb/schema/oh.ttl",
-    "http://mmoon.org/lang/heb/inventory/oh/".toIRI -> "OpenHebrew/heb/inventory/oh.ttl",
-    "http://www.mmoon.org/bnt/schema/bantulm/".toIRI -> "OpenBantu/bnt/schema/bantulm.ttl",
+    "http://mmoon.org/core/" -> "MMoOn/core.ttl",
+    "http://mmoon.org/core/v1.0.0/" -> "MMoOn/core.ttl",
+    "http://mmoon.org/deu/schema/og/" -> "OpenGerman/deu/schema/og.ttl",
+    "http://mmoon.org/deu/inventory/og/" -> "OpenGerman/deu/inventory/og.ttl",
+    "http://mmoon.org/lang/heb/schema/oh/" -> "OpenHebrew/heb/schema/oh.ttl",
+    "http://mmoon.org/lang/heb/inventory/oh/" -> "OpenHebrew/heb/inventory/oh.ttl",
+    "http://www.mmoon.org/bnt/schema/bantulm/" -> "OpenBantu/bnt/schema/bantulm.ttl",
+    "urn://www.mmoon.org/fix/bantulm/ext-decl/" -> "OpenBantu/external-declarations.ttl"
   )
 
   def main(args: Array[String]) {
