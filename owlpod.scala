@@ -42,7 +42,7 @@ object Jenkins {
 
     lazy val setups = Seq(
       CurationSetup(
-        name = s"Jenkins - MMoOn Core & OpenGerman: Blazegraph import and format multiplexing to $targetDir",
+        name = s"Jenkins - MMoOn Core & OpenGerman: Format multiplexing to $targetDir and plain Blazegraph import",
         ontDocSets = Seq(coreDocs, openGermanDocs),
         tasks = Seq(
           RemoveExternalAxioms(),
@@ -53,6 +53,15 @@ object Jenkins {
           Set(Turtle, NTriples, OWLXML, RDFXML, Manchester, Functional),
           PreserveRelativePaths(mmoonRoot.pathAsString, targetDir, prefixesToStrip),
           overwriteExisting = true
+        ),
+        iriMappings = Seq(mmoonRepoIriMapper)
+      ),
+      PublicationSetup(
+        name = s"Jenkins - MMoOn Core & OpenGerman: OWLAPI Inferences to Blazegraph",
+        ontDocSets = Seq(coreDocs, openGermanDocs),
+        tasks = Seq(
+          RemoveExternalAxioms(), AddInferences(),
+          LoadIntoBlazeGraph("mmoon-inf", NoInferenceQuads(fulltextIndexing = false, "http://mmoon.org/fallback/"))
         ),
         iriMappings = Seq(mmoonRepoIriMapper)
       ),
